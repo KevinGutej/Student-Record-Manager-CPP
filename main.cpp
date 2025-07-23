@@ -2,6 +2,7 @@
 #include <vector>
 #include <fstream>
 #include <algorithm>
+#include <numeric>
 
 using namespace std;
 
@@ -28,7 +29,7 @@ void saveToFile(const vector<Student>& students, const string& filename) {
         file << s.name << " " << s.age << " " << s.marks << "\n";
     }
     file.close();
-    cout << " Data saved to file.\n";
+    cout << "Data saved to file.\n";
 }
 
 void loadFromFile(vector<Student>& students, const string& filename) {
@@ -45,7 +46,7 @@ void loadFromFile(vector<Student>& students, const string& filename) {
         students.emplace_back(name, age, marks);
     }
     file.close();
-    cout << " Data loaded from file.\n";
+    cout << "Data loaded from file.\n";
 }
 
 void updateStudent(vector<Student>& students) {
@@ -63,7 +64,7 @@ void updateStudent(vector<Student>& students) {
             return;
         }
     }
-    cout << " Student not found.\n";
+    cout << "Student not found.\n";
 }
 
 void deleteStudent(vector<Student>& students) {
@@ -92,7 +93,7 @@ void sortStudents(vector<Student>& students) {
         sort(students.begin(), students.end(), [](const Student& a, const Student& b) {
             return a.marks > b.marks;
         });
-        cout << " Sorted by marks (high to low).\n";
+        cout << "Sorted by marks (high to low).\n";
     } else if (option == 2) {
         sort(students.begin(), students.end(), [](const Student& a, const Student& b) {
             return a.age < b.age;
@@ -101,6 +102,56 @@ void sortStudents(vector<Student>& students) {
     } else {
         cout << "Invalid choice.\n";
     }
+}
+
+void searchStudent(const vector<Student>& students) {
+    string targetName;
+    cout << "Enter name to search: ";
+    cin >> targetName;
+
+    bool found = false;
+    for (const auto& s : students) {
+        if (s.name == targetName) {
+            s.display();
+            found = true;
+        }
+    }
+    if (!found) cout << "Student not found.\n";
+}
+
+void showTopScorer(const vector<Student>& students) {
+    if (students.empty()) {
+        cout << "No students available.\n";
+        return;
+    }
+    auto top = max_element(students.begin(), students.end(), [](const Student& a, const Student& b) {
+        return a.marks < b.marks;
+    });
+    cout << "Top Scorer:\n";
+    top->display();
+}
+
+void showAverageMarks(const vector<Student>& students) {
+    if (students.empty()) {
+        cout << "No students available.\n";
+        return;
+    }
+    float total = accumulate(students.begin(), students.end(), 0.0f, [](float sum, const Student& s) {
+        return sum + s.marks;
+    });
+    cout << "Average Marks: " << total / students.size() << "\n";
+}
+
+void showOldestStudent(const vector<Student>& students) {
+    if (students.empty()) {
+        cout << "No students available.\n";
+        return;
+    }
+    auto oldest = max_element(students.begin(), students.end(), [](const Student& a, const Student& b) {
+        return a.age < b.age;
+    });
+    cout << "Oldest Student:\n";
+    oldest->display();
 }
 
 int main() {
@@ -116,6 +167,10 @@ int main() {
              << "5. Update Student\n"
              << "6. Delete Student\n"
              << "7. Sort Students\n"
+             << "8. Search Student\n"
+             << "9. Show Top Scorer\n"
+             << "10. Show Average Marks\n"
+             << "11. Show Oldest Student\n"
              << "0. Exit\n"
              << "Enter choice: ";
         cin >> choice;
@@ -150,8 +205,16 @@ int main() {
             deleteStudent(students);
         } else if (choice == 7) {
             sortStudents(students);
+        } else if (choice == 8) {
+            searchStudent(students);
+        } else if (choice == 9) {
+            showTopScorer(students);
+        } else if (choice == 10) {
+            showAverageMarks(students);
+        } else if (choice == 11) {
+            showOldestStudent(students);
         } else if (choice != 0) {
-            cout << " Invalid choice. Try again.\n";
+            cout << "Invalid choice. Try again.\n";
         }
 
     } while (choice != 0);
