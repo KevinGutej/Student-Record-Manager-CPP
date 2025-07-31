@@ -12,7 +12,7 @@ public:
     int age;
     float marks;
 
-    Student(string n, int a, float m) : name(n), age(a), marks(m) {}
+    Student(string n, int a, float m) : name(move(n)), age(a), marks(m) {}
 
     void display() const {
         cout << "Name: " << name << ", Age: " << age << ", Marks: " << marks << "\n";
@@ -21,204 +21,127 @@ public:
 
 void saveToFile(const vector<Student>& students, const string& filename) {
     ofstream file(filename);
-    if (!file) {
-        cout << "Error opening file for writing.\n";
-        return;
-    }
-    for (const auto& s : students) {
-        file << s.name << " " << s.age << " " << s.marks << "\n";
-    }
-    file.close();
-    cout << "Data saved to file.\n";
+    if (!file) return;
+    for (const auto& s : students)
+        file << s.name << ' ' << s.age << ' ' << s.marks << '\n';
 }
 
 void loadFromFile(vector<Student>& students, const string& filename) {
     ifstream file(filename);
-    if (!file) {
-        cout << "Error opening file for reading.\n";
-        return;
-    }
+    if (!file) return;
     string name;
     int age;
     float marks;
     students.clear();
-    while (file >> name >> age >> marks) {
+    while (file >> name >> age >> marks)
         students.emplace_back(name, age, marks);
-    }
-    file.close();
-    cout << "Data loaded from file.\n";
 }
 
 void updateStudent(vector<Student>& students) {
-    string targetName;
-    cout << "Enter the name of the student to update: ";
-    cin >> targetName;
-
-    for (auto& s : students) {
-        if (s.name == targetName) {
-            cout << "Enter new age: ";
-            cin >> s.age;
-            cout << "Enter new marks: ";
-            cin >> s.marks;
-            cout << "Student updated.\n";
-            return;
-        }
-    }
-    cout << "Student not found.\n";
+    string name;
+    cout << "Student name to update: ";
+    cin >> name;
+    auto it = find_if(students.begin(), students.end(), [&](const Student& s) {
+        return s.name == name;
+    });
+    if (it != students.end()) {
+        cout << "New age: "; cin >> it->age;
+        cout << "New marks: "; cin >> it->marks;
+    } else cout << "Not found.\n";
 }
 
 void deleteStudent(vector<Student>& students) {
-    string targetName;
-    cout << "Enter the name of the student to delete: ";
-    cin >> targetName;
-
+    string name;
+    cout << "Student name to delete: ";
+    cin >> name;
     auto it = remove_if(students.begin(), students.end(), [&](const Student& s) {
-        return s.name == targetName;
+        return s.name == name;
     });
-
-    if (it != students.end()) {
-        students.erase(it, students.end());
-        cout << "Student deleted.\n";
-    } else {
-        cout << "Student not found.\n";
-    }
+    if (it != students.end()) students.erase(it, students.end());
+    else cout << "Not found.\n";
 }
 
 void sortStudents(vector<Student>& students) {
-    int option;
-    cout << "Sort by: 1. Marks  2. Age\nEnter choice: ";
-    cin >> option;
-
-    if (option == 1) {
+    int opt;
+    cout << "Sort by: 1.Marks 2.Age: ";
+    cin >> opt;
+    if (opt == 1)
         sort(students.begin(), students.end(), [](const Student& a, const Student& b) {
             return a.marks > b.marks;
         });
-        cout << "Sorted by marks (high to low).\n";
-    } else if (option == 2) {
+    else if (opt == 2)
         sort(students.begin(), students.end(), [](const Student& a, const Student& b) {
             return a.age < b.age;
         });
-        cout << "Sorted by age (youngest first).\n";
-    } else {
-        cout << "Invalid choice.\n";
-    }
 }
 
 void searchStudent(const vector<Student>& students) {
-    string targetName;
-    cout << "Enter name to search: ";
-    cin >> targetName;
-
-    bool found = false;
-    for (const auto& s : students) {
-        if (s.name == targetName) {
-            s.display();
-            found = true;
-        }
-    }
-    if (!found) cout << "Student not found.\n";
+    string name;
+    cout << "Search name: ";
+    cin >> name;
+    auto it = find_if(students.begin(), students.end(), [&](const Student& s) {
+        return s.name == name;
+    });
+    if (it != students.end()) it->display();
+    else cout << "Not found.\n";
 }
 
 void showTopScorer(const vector<Student>& students) {
-    if (students.empty()) {
-        cout << "No students available.\n";
-        return;
-    }
-    auto top = max_element(students.begin(), students.end(), [](const Student& a, const Student& b) {
+    if (students.empty()) return;
+    auto it = max_element(students.begin(), students.end(), [](const Student& a, const Student& b) {
         return a.marks < b.marks;
     });
-    cout << "Top Scorer:\n";
-    top->display();
+    it->display();
 }
 
 void showAverageMarks(const vector<Student>& students) {
-    if (students.empty()) {
-        cout << "No students available.\n";
-        return;
-    }
-    float total = accumulate(students.begin(), students.end(), 0.0f, [](float sum, const Student& s) {
-        return sum + s.marks;
-    });
-    cout << "Average Marks: " << total / students.size() << "\n";
+    if (students.empty()) return;
+    float avg = accumulate(students.begin(), students.end(), 0.0f, [](float acc, const Student& s) {
+        return acc + s.marks;
+    }) / students.size();
+    cout << "Average Marks: " << avg << '\n';
 }
 
 void showOldestStudent(const vector<Student>& students) {
-    if (students.empty()) {
-        cout << "No students available.\n";
-        return;
-    }
-    auto oldest = max_element(students.begin(), students.end(), [](const Student& a, const Student& b) {
+    if (students.empty()) return;
+    auto it = max_element(students.begin(), students.end(), [](const Student& a, const Student& b) {
         return a.age < b.age;
     });
-    cout << "Oldest Student:\n";
-    oldest->display();
+    it->display();
 }
 
 int main() {
     vector<Student> students;
     int choice;
+    string name;
+    int age;
+    float marks;
 
-    do {
-        cout << "\nMenu:\n"
-             << "1. Add Student\n"
-             << "2. Show All Students\n"
-             << "3. Save to File\n"
-             << "4. Load from File\n"
-             << "5. Update Student\n"
-             << "6. Delete Student\n"
-             << "7. Sort Students\n"
-             << "8. Search Student\n"
-             << "9. Show Top Scorer\n"
-             << "10. Show Average Marks\n"
-             << "11. Show Oldest Student\n"
-             << "0. Exit\n"
-             << "Enter choice: ";
+    while (true) {
+        cout << "\n1.Add 2.View 3.Save 4.Load 5.Update 6.Delete 7.Sort 8.Search 9.Top 10.Average 11.Oldest 0.Exit\nChoice: ";
         cin >> choice;
 
-        if (choice == 1) {
-            string name;
-            int age;
-            float marks;
-
-            cout << "Enter name: ";
-            cin >> name;
-            cout << "Enter age: ";
-            cin >> age;
-            cout << "Enter marks: ";
-            cin >> marks;
-
-            students.emplace_back(name, age, marks);
-        } else if (choice == 2) {
-            if (students.empty()) {
-                cout << "No students to display.\n";
-            } else {
-                for (const auto& s : students)
-                    s.display();
-            }
-        } else if (choice == 3) {
-            saveToFile(students, "students.txt");
-        } else if (choice == 4) {
-            loadFromFile(students, "students.txt");
-        } else if (choice == 5) {
-            updateStudent(students);
-        } else if (choice == 6) {
-            deleteStudent(students);
-        } else if (choice == 7) {
-            sortStudents(students);
-        } else if (choice == 8) {
-            searchStudent(students);
-        } else if (choice == 9) {
-            showTopScorer(students);
-        } else if (choice == 10) {
-            showAverageMarks(students);
-        } else if (choice == 11) {
-            showOldestStudent(students);
-        } else if (choice != 0) {
-            cout << "Invalid choice. Try again.\n";
+        switch (choice) {
+            case 1:
+                cout << "Name Age Marks: ";
+                cin >> name >> age >> marks;
+                students.emplace_back(name, age, marks);
+                break;
+            case 2:
+                if (students.empty()) cout << "Empty.\n";
+                else for (const auto& s : students) s.display();
+                break;
+            case 3: saveToFile(students, "students.txt"); break;
+            case 4: loadFromFile(students, "students.txt"); break;
+            case 5: updateStudent(students); break;
+            case 6: deleteStudent(students); break;
+            case 7: sortStudents(students); break;
+            case 8: searchStudent(students); break;
+            case 9: showTopScorer(students); break;
+            case 10: showAverageMarks(students); break;
+            case 11: showOldestStudent(students); break;
+            case 0: return 0;
+            default: cout << "Invalid.\n";
         }
-
-    } while (choice != 0);
-
-    cout << "Exiting program.\n";
-    return 0;
+    }
 }
